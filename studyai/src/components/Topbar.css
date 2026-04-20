@@ -1,0 +1,53 @@
+
+.topbar-header {
+  background: var(--bg2); border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 64px; display: flex;
+  align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 90;
+}
+.topbar-title {
+  font-family: Outfit, sans-serif; font-size: 20px; font-weight: 700; color: var(--text);
+}
+.topbar-subtitle {
+  font-size: 12px; color: var(--text3); margin-top: 1px;
+}
+.topbar-actions {
+  display: flex; align-items: center; gap: 12px;
+}
+.topbar-notif-wrapper {
+  position: relative;
+}
+.topbar-notif-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; width: 40px; height: 40px;
+  cursor: pointer; font-size: 18px; display: flex;
+  align-items: center; justify-content: center; position: relative;
+}
+.topbar-notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; background: var(--coral);
+  border-radius: 50%; display: block; border: 2px solid var(--bg2);
+}
+.topbar-notif-dropdown {
+  position: absolute; right: 0; top: 48px; width: 300px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 16px; z-index: 200;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.topbar-notif-header {
+  font-size: 13px; font-weight: 700; color: var(--text2); margin-bottom: 12px; letter-spacing: 0.5px;
+}
+.topbar-notif-item {
+  display: flex; gap: 10px; padding: 10px;
+  border-radius: 10px; margin-bottom: 6px; background: var(--bg3);
+  border: 1px solid var(--border);
+}
+.topbar-notif-icon {
+  font-size: 18px; flex-shrink: 0;
+}
+.topbar-notif-text {
+  font-size: 13px; color: var(--text); font-weight: 500;
+}
+.topbar-notif-time {
+  font-size: 11px; color: var(--text3); margin-top: 2px;
+}
