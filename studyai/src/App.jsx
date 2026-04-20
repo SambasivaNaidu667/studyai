@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { AppProvider } from './context/AppContext'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -8,7 +8,7 @@ import Auth from './pages/Auth'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <Routes>
           <Route path="/auth" element={<AuthWrapper />} />
@@ -21,7 +21,7 @@ export default function App() {
           } />
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 

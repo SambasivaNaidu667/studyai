@@ -8,7 +8,7 @@ Watch the full project walkthrough here: [StudyAI Demo Video](https://drive.goog
 
 ## 🌐 Live Demo
 
-**[https://studyai-37642j74y-sambasiva25bcs10667-8126s-projects.vercel.app](https://studyai-37642j74y-sambasiva25bcs10667-8126s-projects.vercel.app)**
+**[https://SambasivaNaidu667.github.io/studyai/](https://SambasivaNaidu667.github.io/studyai/)**
 
 ---
 
