@@ -2,6 +2,10 @@
 
 > Built with React 18 + Firebase + Google Gemini AI
 
+## 🎥 Project Demo Video
+
+Watch the full project walkthrough here: [StudyAI Demo Video](https://drive.google.com/file/d/1nLt_3AX4j5DHbLJXG2v2-SknHm6rkTzF/view?usp=sharing)
+
 ---
 
 ## 📋 Problem Statement
@@ -39,6 +43,8 @@ Studies show that **structured study planning** combined with **active recall te
 ---
 
 ## ⚛️ React Concepts Demonstrated
+
+
 
 ### Core Concepts
 | Concept | Where Used |
