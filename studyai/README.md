@@ -205,7 +205,8 @@ npm run preview
 ## 👤 Author
 
 **Sambasiva Naidu**  
-End-Term Project, Building Web Applications with React (2029 Batch);
+End-Term Project, Building Web Applications with React (2029 Batch)
+Email: sambasiva.25bcs10667@sst.scaler.com
 
 ---
 
