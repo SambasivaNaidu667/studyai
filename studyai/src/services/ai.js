@@ -87,9 +87,28 @@ Return JSON with:
 Colors must be one of: accent, teal, amber, coral, green.
 Generate ${Math.min(Math.ceil(examDays / 7), 4)} weeks.`
 
-  const text = await callGemini(system, prompt)
-  const clean = text.replace(/```json?|```/g, '').trim()
-  return JSON.parse(clean)
+  try {
+    const text = await callGemini(system, prompt)
+    const clean = text.replace(/```json?|```/g, '').trim()
+    return JSON.parse(clean)
+  } catch (err) {
+    console.error('Study Plan AI fallback used due to quota:', err)
+    return {
+      weeks: [
+        {
+          week: 1, theme: "Core Concepts Revision", days: [
+            { day: "Mon", sessions: [{ subject: subjects[0]?.name || "Core Subject", topic: subjects[0]?.topics[0]?.name || "Topic 1", hours: 2, color: subjects[0]?.color || "accent" }] },
+            { day: "Tue", sessions: [{ subject: subjects[0]?.name || "Core Subject", topic: subjects[0]?.topics[1]?.name || "Topic 2", hours: 2, color: subjects[0]?.color || "accent" }] },
+            { day: "Wed", sessions: [{ subject: subjects[1]?.name || "Second Subject", topic: subjects[1]?.topics[0]?.name || "Topic 1", hours: 2, color: subjects[1]?.color || "teal" }] },
+            { day: "Thu", sessions: [{ subject: subjects[1]?.name || "Second Subject", topic: "Review Pending", hours: 1, color: "amber" }] },
+            { day: "Fri", sessions: [{ subject: "Revision", topic: "Weekly Review", hours: 2, color: "green" }] }
+          ]
+        }
+      ],
+      insights: ["Focus on highest priority items first.", "Take short breaks every hour.", "Review mistakes actively."],
+      priorityOrder: ["High Priority Topics", "Medium Priority"]
+    }
+  }
 }
 
 
