@@ -6,6 +6,10 @@
 
 Watch the full project walkthrough here: [StudyAI Demo Video](https://drive.google.com/file/d/1nLt_3AX4j5DHbLJXG2v2-SknHm6rkTzF/view?usp=sharing)
 
+## 🌐 Live Demo
+
+**[https://studyai-37642j74y-sambasiva25bcs10667-8126s-projects.vercel.app](https://studyai-37642j74y-sambasiva25bcs10667-8126s-projects.vercel.app)**
+
 ---
 
 ## 📋 Problem Statement
