@@ -86,10 +86,24 @@ export default function AIAssistant() {
       const allMsgs = [...messages, userMsg]
       const reply = await chatWithAI(allMsgs, subjectContext)
       setMessages(m => [...m, { role: 'ai', text: reply, timestamp: Date.now() }])
-    } catch {
+    } catch (err) {
+      console.error('AI Error:', err)
+      let fallbackText = '';
+      const lowerMsg = msg.toLowerCase();
+      
+      if (lowerMsg.includes('hi') || lowerMsg.includes('hello') || lowerMsg.includes('hey')) {
+        fallbackText = `Hello! 👋 How can I help you with your studies today?\n\n*(Note: The AI API is currently unavailable, so I am providing a fallback response)*`;
+      } else if (lowerMsg.includes('plan') || lowerMsg.includes('strategy')) {
+        fallbackText = `You asked about a plan or strategy: "${msg}"\n\nHere is a quick tip:\n• Break your study sessions into 25-minute Pomodoro blocks.\n• Focus on active recall instead of passive reading.\n• Prioritize your pending topics.\n\n*(Note: AI fallback response)*`;
+      } else if (lowerMsg.includes('explain') || lowerMsg.includes('what is') || lowerMsg.includes('how')) {
+        fallbackText = `You asked: "${msg}"\n\nTo help you with this:\n• Try breaking the concept down logically.\n• Relate it to a real-world example.\n• Check your subject notes for specific formulas or definitions.\n\n*(Note: AI fallback response)*`;
+      } else {
+        fallbackText = `You asked: "${msg}"\n\nI am currently operating in offline mode due to an API connection issue. I'd love to give you a specific answer, but I can only offer general advice right now. Please check your notes!\n\n*(Note: AI fallback response)*`;
+      }
+
       setMessages(m => [...m, {
         role: 'ai',
-        text: "I'm having a moment! 🤔 But here's a quick tip: use the 80/20 rule — 20% of topics typically give 80% of marks. Focus on your high-priority items first. You've got this! 💪",
+        text: fallbackText,
         timestamp: Date.now(),
       }])
     }
