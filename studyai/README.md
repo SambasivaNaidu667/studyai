@@ -8,6 +8,9 @@ Watch the full project walkthrough here: [StudyAI Demo Video](https://drive.goog
 
 
 ---
+##
+projectlink:
+https://studyai-ruddy.vercel.app/#/ai
 
 ## 📋 Problem Statement
 
