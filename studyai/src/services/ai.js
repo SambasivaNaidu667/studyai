@@ -1,26 +1,43 @@
 
-
-
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const MODEL = 'gemini-2.0-flash'
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
+
+// Fallback chain: try each model in order until one succeeds
+const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash']
+
+function getUrl(model) {
+  return `${BASE_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`
+}
+
+async function fetchWithFallback(body) {
+  let lastError
+  for (const model of MODELS) {
+    try {
+      const res = await fetch(getUrl(model), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(`${res.status}: ${errData.error?.message || 'Unknown error'}`)
+      }
+      const data = await res.json()
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    } catch (err) {
+      console.warn(`Model ${model} failed:`, err.message)
+      lastError = err
+    }
+  }
+  throw lastError
+}
 
 
 async function callGemini(system, userMessage) {
-  const res = await fetch(GEMINI_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-    }),
+  return fetchWithFallback({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: 'user', parts: [{ text: userMessage }] }],
   })
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}))
-    throw new Error(`API error: ${res.status} ${errData.error?.message || ''}`)
-  }
-  const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 }
 
 
@@ -30,7 +47,6 @@ The student's pending topics: ${subjectContext}
 Keep responses concise (3–5 sentences), practical, and motivating.
 Use bullet points when listing. End with one actionable tip.
 Format: plain text, no markdown headers.`
-
 
   // Gemini API requires the conversation to start with a 'user' message.
   // Drop any leading 'ai' (model) messages like the initial greeting.
@@ -42,26 +58,11 @@ Format: plain text, no markdown headers.`
     parts: [{ text: m.text }],
   }))
 
-  const res = await fetch(GEMINI_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: apiMessages,
-    }),
+  return fetchWithFallback({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: apiMessages,
   })
-
-  if (!res.ok) {
-    const errData = await res.json().catch(() => ({}))
-    throw new Error(`API error: ${res.status} ${errData.error?.message || ''}`)
-  }
-
-  const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 }
-
-
-
 
 
 export async function generateStudyPlan(subjects, examDays, dailyHours) {
@@ -97,7 +98,7 @@ Generate ${Math.min(Math.ceil(examDays / 7), 4)} weeks.`
     const clean = text.replace(/```json?|```/g, '').trim()
     return JSON.parse(clean)
   } catch (err) {
-    console.error('Study Plan AI fallback used due to quota:', err)
+    console.error('Study Plan AI fallback used:', err)
     return {
       weeks: [
         {
