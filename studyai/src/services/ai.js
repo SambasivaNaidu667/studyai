@@ -1,6 +1,6 @@
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
+const GEMINI_API_KEY = atob(import.meta.env.VITE_GEMINI_API_KEY)
+const GROQ_API_KEY = atob(import.meta.env.VITE_GROQ_API_KEY)
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama3-70b-8192'
