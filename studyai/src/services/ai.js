@@ -1,43 +1,103 @@
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models'
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
+const GROQ_MODEL = 'llama3-70b-8192'
 
-// Fallback chain: try each model in order until one succeeds
-const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash']
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash']
 
-function getUrl(model) {
-  return `${BASE_URL}/${model}:generateContent?key=${GEMINI_API_KEY}`
+function geminiUrl(model) {
+  return `${GEMINI_BASE}/${model}:generateContent?key=${GEMINI_API_KEY}`
 }
 
-async function fetchWithFallback(body) {
-  let lastError
-  for (const model of MODELS) {
-    try {
-      const res = await fetch(getUrl(model), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(`${res.status}: ${errData.error?.message || 'Unknown error'}`)
-      }
-      const data = await res.json()
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-    } catch (err) {
-      console.warn(`Model ${model} failed:`, err.message)
-      lastError = err
-    }
+async function callGeminiModel(model, body) {
+  const res = await fetch(geminiUrl(model), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}))
+    throw new Error(`Gemini ${model} ${res.status}: ${errData.error?.message || 'error'}`)
   }
-  throw lastError
+  const data = await res.json()
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+}
+
+async function callGroq(systemPrompt, userText) {
+  if (!GROQ_API_KEY || GROQ_API_KEY === 'paste_your_full_groq_key_here') {
+    throw new Error('Groq API key not configured')
+  }
+  const res = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userText },
+      ],
+      temperature: 0.7,
+      max_tokens: 512,
+    }),
+  })
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}))
+    throw new Error(`Groq ${res.status}: ${errData.error?.message || 'error'}`)
+  }
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content || ''
+}
+
+async function callGroqConversation(systemPrompt, messages) {
+  if (!GROQ_API_KEY || GROQ_API_KEY === 'paste_your_full_groq_key_here') {
+    throw new Error('Groq API key not configured')
+  }
+  const groqMessages = [
+    { role: 'system', content: systemPrompt },
+    ...messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })),
+  ]
+  const res = await fetch(GROQ_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: groqMessages,
+      temperature: 0.7,
+      max_tokens: 512,
+    }),
+  })
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}))
+    throw new Error(`Groq ${res.status}: ${errData.error?.message || 'error'}`)
+  }
+  const data = await res.json()
+  return data.choices?.[0]?.message?.content || ''
 }
 
 
 async function callGemini(system, userMessage) {
-  return fetchWithFallback({
-    systemInstruction: { parts: [{ text: system }] },
-    contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-  })
+  let lastErr
+  for (const model of GEMINI_MODELS) {
+    try {
+      return await callGeminiModel(model, {
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+      })
+    } catch (err) {
+      console.warn(`[AI] ${model} failed:`, err.message)
+      lastErr = err
+    }
+  }
+  console.warn('[AI] All Gemini models failed, trying Groq...')
+  return callGroq(system, userMessage)
 }
 
 
@@ -48,8 +108,6 @@ Keep responses concise (3–5 sentences), practical, and motivating.
 Use bullet points when listing. End with one actionable tip.
 Format: plain text, no markdown headers.`
 
-  // Gemini API requires the conversation to start with a 'user' message.
-  // Drop any leading 'ai' (model) messages like the initial greeting.
   const firstUserIdx = messages.findIndex(m => m.role === 'user')
   const trimmed = firstUserIdx >= 0 ? messages.slice(firstUserIdx) : messages
 
@@ -58,10 +116,20 @@ Format: plain text, no markdown headers.`
     parts: [{ text: m.text }],
   }))
 
-  return fetchWithFallback({
-    systemInstruction: { parts: [{ text: system }] },
-    contents: apiMessages,
-  })
+  let lastErr
+  for (const model of GEMINI_MODELS) {
+    try {
+      return await callGeminiModel(model, {
+        systemInstruction: { parts: [{ text: system }] },
+        contents: apiMessages,
+      })
+    } catch (err) {
+      console.warn(`[AI] ${model} failed:`, err.message)
+      lastErr = err
+    }
+  }
+  console.warn('[AI] All Gemini models failed, trying Groq...')
+  return callGroqConversation(system, trimmed)
 }
 
 
@@ -98,7 +166,7 @@ Generate ${Math.min(Math.ceil(examDays / 7), 4)} weeks.`
     const clean = text.replace(/```json?|```/g, '').trim()
     return JSON.parse(clean)
   } catch (err) {
-    console.error('Study Plan AI fallback used:', err)
+    console.error('[AI] Study Plan all providers failed:', err)
     return {
       weeks: [
         {
