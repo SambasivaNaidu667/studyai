@@ -140,7 +140,7 @@ export default function AIAssistant() {
                 <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 700 }}>AI Study Assistant</div>
                 <div style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--teal)' }}>
                   <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--teal)', animation: 'pulse-dot 2s ease infinite' }} />
-                  Online Â· Powered by Gemini
+                  Online • Powered by AI
                 </div>
               </div>
             </div>

@@ -1,11 +1,12 @@
 
-const GEMINI_API_KEY = atob(import.meta.env.VITE_GEMINI_API_KEY)
-const GROQ_API_KEY = atob(import.meta.env.VITE_GROQ_API_KEY)
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama3-70b-8192'
 
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash']
+const GEMINI_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash-exp']
+const GROQ_MODELS = ['llama-3.1-8b-instant', 'llama3-70b-8192', 'mixtral-8x7b-32768']
 
 function geminiUrl(model) {
   return `${GEMINI_BASE}/${model}:generateContent?key=${GEMINI_API_KEY}`
@@ -25,8 +26,8 @@ async function callGeminiModel(model, body) {
   return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 }
 
-async function callGroq(systemPrompt, userText) {
-  if (!GROQ_API_KEY) throw new Error('Groq API key not configured')
+async function callGroqModel(model, systemPrompt, userText) {
+  if (!GROQ_API_KEY || GROQ_API_KEY.includes('paste_your')) throw new Error('Groq key not set')
   const res = await fetch(GROQ_URL, {
     method: 'POST',
     headers: {
@@ -34,27 +35,25 @@ async function callGroq(systemPrompt, userText) {
       'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userText },
       ],
       temperature: 0.7,
-      max_tokens: 512,
+      max_tokens: 1024,
     }),
   })
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}))
-    throw new Error(`Groq ${res.status}: ${errData.error?.message || 'error'}`)
+    throw new Error(`Groq ${model} ${res.status}: ${errData.error?.message || 'error'}`)
   }
   const data = await res.json()
   return data.choices?.[0]?.message?.content || ''
 }
 
-async function callGroqConversation(systemPrompt, messages) {
-  if (!GROQ_API_KEY || GROQ_API_KEY === 'paste_your_full_groq_key_here') {
-    throw new Error('Groq API key not configured')
-  }
+async function callGroqConversation(model, systemPrompt, messages) {
+  if (!GROQ_API_KEY || GROQ_API_KEY.includes('paste_your')) throw new Error('Groq key not set')
   const groqMessages = [
     { role: 'system', content: systemPrompt },
     ...messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text })),
@@ -66,23 +65,24 @@ async function callGroqConversation(systemPrompt, messages) {
       'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: GROQ_MODEL,
+      model,
       messages: groqMessages,
       temperature: 0.7,
-      max_tokens: 512,
+      max_tokens: 1024,
     }),
   })
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}))
-    throw new Error(`Groq ${res.status}: ${errData.error?.message || 'error'}`)
+    throw new Error(`Groq ${model} ${res.status}: ${errData.error?.message || 'error'}`)
   }
   const data = await res.json()
   return data.choices?.[0]?.message?.content || ''
 }
 
 
-async function callGemini(system, userMessage) {
+async function callAI(system, userMessage) {
   let lastErr
+  // Try all Gemini models first
   for (const model of GEMINI_MODELS) {
     try {
       return await callGeminiModel(model, {
@@ -90,12 +90,22 @@ async function callGemini(system, userMessage) {
         contents: [{ role: 'user', parts: [{ text: userMessage }] }],
       })
     } catch (err) {
-      console.warn(`[AI] ${model} failed:`, err.message)
+      console.warn(`[AI] Gemini ${model} failed, trying next...`)
       lastErr = err
     }
   }
-  console.warn('[AI] All Gemini models failed, trying Groq...')
-  return callGroq(system, userMessage)
+
+  // Fallback to all Groq models
+  for (const model of GROQ_MODELS) {
+    try {
+      return await callGroqModel(model, system, userMessage)
+    } catch (err) {
+      console.warn(`[AI] Groq ${model} failed, trying next...`)
+      lastErr = err
+    }
+  }
+
+  throw lastErr || new Error('All AI providers failed')
 }
 
 
@@ -115,6 +125,7 @@ Format: plain text, no markdown headers.`
   }))
 
   let lastErr
+  // Try Gemini
   for (const model of GEMINI_MODELS) {
     try {
       return await callGeminiModel(model, {
@@ -122,12 +133,22 @@ Format: plain text, no markdown headers.`
         contents: apiMessages,
       })
     } catch (err) {
-      console.warn(`[AI] ${model} failed:`, err.message)
+      console.warn(`[AI] Gemini ${model} failed, trying next...`)
       lastErr = err
     }
   }
-  console.warn('[AI] All Gemini models failed, trying Groq...')
-  return callGroqConversation(system, trimmed)
+
+  // Try Groq
+  for (const model of GROQ_MODELS) {
+    try {
+      return await callGroqConversation(model, system, trimmed)
+    } catch (err) {
+      console.warn(`[AI] Groq ${model} failed, trying next...`)
+      lastErr = err
+    }
+  }
+
+  throw lastErr || new Error('All AI providers failed')
 }
 
 
@@ -160,7 +181,7 @@ Colors must be one of: accent, teal, amber, coral, green.
 Generate ${Math.min(Math.ceil(examDays / 7), 4)} weeks.`
 
   try {
-    const text = await callGemini(system, prompt)
+    const text = await callAI(system, prompt)
     const clean = text.replace(/```json?|```/g, '').trim()
     return JSON.parse(clean)
   } catch (err) {
@@ -197,7 +218,7 @@ ${JSON.stringify(subjectData, null, 2)}
 
 Give 3–4 specific, actionable recommendations. Each on a new line starting with •`
 
-  return callGemini(system, prompt)
+  return callAI(system, prompt)
 }
 
 

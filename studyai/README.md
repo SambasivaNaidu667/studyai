@@ -180,12 +180,9 @@ npm run dev
 
 ### Environment Variables
 ```
-VITE_GEMINI_API_KEY=your_base64_encoded_key
-VITE_GROQ_API_KEY=your_base64_encoded_key
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_GROQ_API_KEY=your_groq_api_key_here
 ```
-
-> [!IMPORTANT]
-> **API Key Encoding**: To prevent deployment errors (GitHub Push Protection), API keys in `.env` must be **Base64 encoded**. You can encode your key using `echo -n "key" | base64` or an online tool.
 
 ### Build for Production
 ```bash
