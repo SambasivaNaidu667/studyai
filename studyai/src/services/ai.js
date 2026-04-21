@@ -2,7 +2,7 @@
 
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const MODEL = 'gemini-2.0-flash'
+const MODEL = 'gemini-1.5-flash'
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`
 
 
@@ -31,7 +31,7 @@ Keep responses concise (3–5 sentences), practical, and motivating.
 Use bullet points when listing. End with one actionable tip.
 Format: plain text, no markdown headers.`
 
-  
+
   const apiMessages = messages.map(m => ({
     role: m.role === 'ai' ? 'model' : 'user',
     parts: [{ text: m.text }],
@@ -45,12 +45,12 @@ Format: plain text, no markdown headers.`
       contents: apiMessages,
     }),
   })
-  
+
   if (!res.ok) {
     const errData = await res.json().catch(() => ({}))
     throw new Error(`API error: ${res.status} ${errData.error?.message || ''}`)
   }
-  
+
   const data = await res.json()
   return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 }
