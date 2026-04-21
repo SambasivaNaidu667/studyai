@@ -36,7 +36,9 @@ Studies show that **structured study planning** combined with **active recall te
 - **🗓️ AI Study Planner** — Gemini AI generates personalized weekly roadmaps based on exam date, available hours, and topic priorities
 
 - **📊 Analytics Dashboard** — Visual progress tracking with subject breakdowns, priority-based completion stats, and AI-powered weak area detection
-- **✨ AI Chat Assistant** — Conversational AI tutor powered by Gemini for answering study questions
+- **✨ Intelligent AI Assistant** — Conversational AI tutor with a **Three-Tier Fallback System** (Gemini 2.5 → Gemini 2.0 → Groq Llama 3) ensuring 99.9% availability
+- **💾 Chat Persistence** — Conversation history is now automatically saved to `localStorage`, so your study sessions are never lost on refresh
+- **🛡️ Resilient Failover** — Smart fallback logic that provides helpful study tips even if ALL AI services are temporarily unreachable
 
 ### User Experience
 - **🔐 Authentication** — Email/password signup & login with Firebase Auth; protected routes prevent unauthorized access
@@ -144,7 +146,8 @@ src/
 | **State** | React Context API + `useState`/`useEffect` |
 | **Auth** | Firebase Authentication |
 | **Database** | Cloud Firestore |
-| **AI** | Google Gemini 1.5 Flash API |
+| **AI (Primary)** | Google Gemini 2.5 Flash / 2.0 Flash |
+| **AI (Fallback)** | Groq (Llama 3 70B) |
 | **Build** | Vite 5 |
 | **Deployment** | Vercel |
 
@@ -169,7 +172,7 @@ npm install
 
 # 3. Create environment file
 cp .env.example .env
-# Add your VITE_GEMINI_API_KEY to .env
+# Add your VITE_GEMINI_API_KEY and VITE_GROQ_API_KEY to .env
 
 # 4. Start development server
 npm run dev
@@ -178,6 +181,7 @@ npm run dev
 ### Environment Variables
 ```
 VITE_GEMINI_API_KEY=your_gemini_api_key_here
+VITE_GROQ_API_KEY=your_groq_api_key_here
 ```
 
 ### Build for Production

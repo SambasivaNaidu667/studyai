@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
+import { useAuth } from '../context/AuthContext'
 import { chatWithAI, summarizeNotes } from '../services/ai'
 import { Button, Badge, Card, LoadingDots, AIChip } from '../components/UI'
 
@@ -57,11 +58,23 @@ function Message({ msg }) {
 
 export default function AIAssistant() {
   const { subjects } = useApp()
-  const [messages, setMessages] = useState([{
-    role: 'ai',
-    text: "Hi! I'm your AI study assistant powered by Gemini. I can help you understand tough concepts, suggest what to focus on, summarize your notes, and build personalized study strategies.\n\nWhat would you like to work on today? 🎓",
-    timestamp: Date.now(),
-  }])
+  const { user } = useAuth()
+  const storageKey = `studyai_chat_${user?.uid}`
+  
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem(storageKey)
+    if (saved) return JSON.parse(saved)
+    return [{
+      role: 'ai',
+      text: "Hi! I'm your AI study assistant powered by Gemini. I can help you understand tough concepts, suggest what to focus on, summarize your notes, and build personalized study strategies.\n\nWhat would you like to work on today? 🎓",
+      timestamp: Date.now(),
+    }]
+  })
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(messages))
+  }, [messages, storageKey])
+
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const chatRef = useRef(null)
