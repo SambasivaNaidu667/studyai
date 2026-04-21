@@ -26,9 +26,7 @@ async function callGeminiModel(model, body) {
 }
 
 async function callGroq(systemPrompt, userText) {
-  if (!GROQ_API_KEY || GROQ_API_KEY === 'paste_your_full_groq_key_here') {
-    throw new Error('Groq API key not configured')
-  }
+  if (!GROQ_API_KEY) throw new Error('Groq API key not configured')
   const res = await fetch(GROQ_URL, {
     method: 'POST',
     headers: {
