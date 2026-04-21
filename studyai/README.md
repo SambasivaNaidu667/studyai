@@ -4,11 +4,8 @@
 
 ## 🎥 Project Demo Video
 
-Watch the full project walkthrough here: [StudyAI Demo Video](https://drive.google.com/file/d/1nLt_3AX4j5DHbLJXG2v2-SknHm6rkTzF/view?usp=sharing)
+Watch the full project walkthrough here: [StudyAI Demo Video](https://drive.google.com/file/d/1E8UVOyalTBrAhR9JIWsSSgcvV96Isrh0/view?usp=sharinghttps://drive.google.com/file/d/1E8UVOyalTBrAhR9JIWsSSgcvV96Isrh0/view?usp=sharing)
 
-## 🌐 Live Demo
-
-**https://studyai-j6oms5tmk-sambasiva25bcs10667-8126s-projects.vercel.app/#/**
 
 ---
 
