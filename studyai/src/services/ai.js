@@ -32,7 +32,12 @@ Use bullet points when listing. End with one actionable tip.
 Format: plain text, no markdown headers.`
 
 
-  const apiMessages = messages.map(m => ({
+  // Gemini API requires the conversation to start with a 'user' message.
+  // Drop any leading 'ai' (model) messages like the initial greeting.
+  const firstUserIdx = messages.findIndex(m => m.role === 'user')
+  const trimmed = firstUserIdx >= 0 ? messages.slice(firstUserIdx) : messages
+
+  const apiMessages = trimmed.map(m => ({
     role: m.role === 'ai' ? 'model' : 'user',
     parts: [{ text: m.text }],
   }))
